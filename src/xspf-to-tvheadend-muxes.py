@@ -18,10 +18,11 @@ def get_tvheadend_networks(access):
        not isinstance(raw_networks['entries'], list):
         raise TypeError('received invalid network list')
 
-    networks = []
+    networks = {}
 
     for raw_network in raw_networks['entries']:
-        networks.append(Network(raw_network))
+        network = Network(raw_network)
+        networks[network.network_name] = network
 
     return networks
 
@@ -32,19 +33,41 @@ if __name__ == '__main__':
         'host',
         metavar='HOST[:PORT]',
         help='host name and optional port for accessing Tvheadend (default: %d)' % DEFAULT_TVHEADEND_PORT)
+    argument_parser.add_argument(
+        'network',
+        metavar='NETWORK',
+        help='network to which the muxes are addes',
+        nargs='?')
+    argument_parser.add_argument(
+        'xspf',
+        metavar='XSPF',
+        help='XSPF playlist',
+        nargs='?')
     argument_parser.add_argument('-u', '--username', help='username')
     argument_parser.add_argument('-p', '--password', help='password')
     argument_parser.add_argument('-n', '--networks', help='list the available networks', action='store_true')
 
     arguments = argument_parser.parse_args()
 
+    if not arguments.networks:
+        if not arguments.network:
+            raise ValueError('network argument is missing')
+
+        if not arguments.xspf:
+            raise ValueError('XSPF argument is missing')
+
     tvheadend_access = Access(arguments.host, arguments.username, arguments.password)
     tvheadend_networks = get_tvheadend_networks(tvheadend_access)
 
     if (arguments.networks):
-        for network in tvheadend_networks:
-            print(network.network_name)
+        for network_name in tvheadend_networks.keys():
+            print(network_name)
 
         sys.exit(0)
+
+    if not arguments.network in tvheadend_networks:
+        raise ValueError('unknown network "%s"' % arguments.network)
+
+    tvheadend_network = tvheadend_networks[arguments.network]
 
     sys.exit(0)
