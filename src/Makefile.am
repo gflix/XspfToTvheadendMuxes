@@ -1,3 +1,6 @@
+SUBDIRS = \
+    pkg
+
 bin_SCRIPTS = \
     xspf-to-tvheadend-muxes
 
