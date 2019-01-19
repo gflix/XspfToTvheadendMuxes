@@ -25,5 +25,6 @@ AC_CONFIG_FILES([
     src/Makefile
     src/xspf-to-tvheadend-muxes:src/xspf-to-tvheadend-muxes.py
     src/tvheadend/Makefile
+    src/xspf/Makefile
 ])
 AC_OUTPUT

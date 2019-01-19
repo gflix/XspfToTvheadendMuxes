@@ -1,5 +1,6 @@
 SUBDIRS = \
-    tvheadend
+    tvheadend \
+    xspf
 
 bin_SCRIPTS = \
     xspf-to-tvheadend-muxes

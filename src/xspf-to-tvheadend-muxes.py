@@ -6,6 +6,8 @@ sys.path.append('@LIBDIR@/xspf-to-tvheadend-muxes')
 from argparse import ArgumentParser
 from tvheadend.access import Access, DEFAULT_TVHEADEND_PORT
 from tvheadend.network import Network
+from xspf.playlist import Playlist
+from xspf.track import Track
 
 def get_tvheadend_networks(access):
     if not isinstance(access, Access):
@@ -26,6 +28,35 @@ def get_tvheadend_networks(access):
 
     return networks
 
+def create_mux(access, network, network_interface, track):
+    if not isinstance(access, Access) or \
+       not isinstance(network, Network) or \
+       not isinstance(network_interface, str) or \
+       not isinstance(track, Track):
+        raise TypeError('invalid arguments')
+
+    print('Creating mux "%s"...' % track.title)
+
+    data = {
+        'uuid': network.uuid,
+        'conf': {
+            'iptv_interface': network_interface,
+            'iptv_muxname': track.title,
+            'iptv_url': track.location,
+            'name': track.title,
+            'iptv_icon': track.image
+        }
+    }
+
+    access.request('mpegts/network/mux_create', data)
+
+def create_muxes(access, network, network_interface, playlist):
+    if not isinstance(playlist, Playlist):
+        raise TypeError('invalid arguments')
+
+    for track in playlist.tracks:
+        create_mux(access, network, network_interface, track)
+
 if __name__ == '__main__':
 
     argument_parser = ArgumentParser()
@@ -37,6 +68,11 @@ if __name__ == '__main__':
         'network',
         metavar='NETWORK',
         help='network to which the muxes are addes',
+        nargs='?')
+    argument_parser.add_argument(
+        'interface',
+        metavar='INTERFACE',
+        help='network interface',
         nargs='?')
     argument_parser.add_argument(
         'xspf',
@@ -52,6 +88,9 @@ if __name__ == '__main__':
     if not arguments.networks:
         if not arguments.network:
             raise ValueError('network argument is missing')
+
+        if not arguments.interface:
+            raise ValueError('network interface argument is missing')
 
         if not arguments.xspf:
             raise ValueError('XSPF argument is missing')
@@ -69,5 +108,12 @@ if __name__ == '__main__':
         raise ValueError('unknown network "%s"' % arguments.network)
 
     tvheadend_network = tvheadend_networks[arguments.network]
+
+    playlist = Playlist(arguments.xspf)
+    print(playlist.title)
+    print(playlist.info)
+    print(len(playlist.tracks))
+
+    create_muxes(tvheadend_access, tvheadend_network, arguments.interface, playlist)
 
     sys.exit(0)

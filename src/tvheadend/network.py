@@ -8,7 +8,7 @@ class Network(object):
 
     def load(self, data):
         if not isinstance(data, dict):
-            raise TypeError('Network: expect dict for data')
+            raise TypeError('Network: invalid arguments')
 
         if not TAG_UUID in data or \
            not TAG_NETWORKNAME in data or \
